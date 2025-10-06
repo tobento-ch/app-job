@@ -43,7 +43,6 @@ class JobCrudController extends AbstractCrudController
      * Create a new JobCrudController instance.
      *
      * @param JobRepositoryInterface $repository
-     * @param RegistriesInterface $registries
      */
     public function __construct(
         JobRepositoryInterface $repository,
@@ -54,7 +53,7 @@ class JobCrudController extends AbstractCrudController
     /**
      * Returns the configured fields.
      *
-     * @param string $actionName
+     * @param ActionInterface $action
      * @return iterable<FieldInterface>|FieldsInterface
      */
     protected function configureFields(ActionInterface $action): iterable|FieldsInterface
@@ -64,10 +63,10 @@ class JobCrudController extends AbstractCrudController
         }
         
         if ($action->name() !== 'index') {
-            yield Field\PrimaryId::new(name: 'id');
+            yield new Field\PrimaryId(name: 'id');
         }
         
-        yield Field\Select::new(name: 'status', label: trans('Status'))
+        yield new Field\Select(name: 'status', label: trans('Status'))
             ->group(trans('Job'))
             ->options([
                 'pending' => trans('pending'),
@@ -82,20 +81,20 @@ class JobCrudController extends AbstractCrudController
                 'skipped' => 'text-warning',
             ]));
         
-        yield Field\Text::new(name: 'app_id', label: trans('App ID'))
+        yield new Field\Text(name: 'app_id', label: trans('App ID'))
             ->group(trans('Job'));
         
-        yield Field\Text::new(name: 'name', label: trans('Name'))
+        yield new Field\Text(name: 'name', label: trans('Name'))
             ->group(trans('Job'));
         
-        yield Field\Text::new(name: 'job_id', label: trans('Job ID'))
+        yield new Field\Text(name: 'job_id', label: trans('Job ID'))
             ->type('number')
             ->group(trans('Job'));
         
-        yield Field\Text::new(name: 'queue', label: trans('Queue'))
+        yield new Field\Text(name: 'queue', label: trans('Queue'))
             ->group(trans('Job'));
         
-        yield Field\Radios::new(name: 'queued', label: trans('Queued'))
+        yield new Field\Radios(name: 'queued', label: trans('Queued'))
             ->group(trans('Job'))
             ->options(['0' => trans('No'), '1' => trans('Yes')])
             ->formatValue(new Field\Formatter\Badge(classes: [
@@ -103,33 +102,33 @@ class JobCrudController extends AbstractCrudController
                 '1' => 'text-success',
             ]));
         
-        yield Field\Text::new(name: 'created_at', label: trans('Created At'))
+        yield new Field\Text(name: 'created_at', label: trans('Created At'))
             ->type('datetime-local')
             ->group(trans('Job'))
             ->formatValue(new Field\Formatter\Date(format: 'EEEE, dd. MMMM yyyy, HH:mm'));
         
-        yield Field\Textarea::new(name: 'payload', label: trans('Payload'))
+        yield new Field\Textarea(name: 'payload', label: trans('Payload'))
             ->group(trans('Job'));
         
-        yield Field\Textarea::new(name: 'parameters', label: trans('Parameters'))
+        yield new Field\Textarea(name: 'parameters', label: trans('Parameters'))
             ->group(trans('Job'));
         
-        yield Field\Text::new(name: 'retries', label: trans('Attempts'))
+        yield new Field\Text(name: 'retries', label: trans('Attempts'))
             ->group(trans('Run Details'))
             ->type('number');
         
-        yield Field\Text::new(name: 'run_at', label: trans('Run At'))
+        yield new Field\Text(name: 'run_at', label: trans('Run At'))
             ->type('datetime-local')
             ->group(trans('Run Details'))
             ->formatValue(new Field\Formatter\Date(format: 'EEEE, dd. MMMM yyyy, HH:mm'));
         
-        yield Field\Text::new(name: 'runtime_seconds', label: trans('Runtime In Seconds'))
+        yield new Field\Text(name: 'runtime_seconds', label: trans('Runtime In Seconds'))
             ->group(trans('Run Details'));
         
-        yield Field\Text::new(name: 'memory_usage_bytes', label: trans('Memory Usage In Bytes'))
+        yield new Field\Text(name: 'memory_usage_bytes', label: trans('Memory Usage In Bytes'))
             ->group(trans('Run Details'));
 
-        yield Field\Textarea::new(name: 'exception', label: trans('Exception'))
+        yield new Field\Textarea(name: 'exception', label: trans('Exception'))
             ->group(trans('Run Details'));
     }
     
@@ -140,31 +139,31 @@ class JobCrudController extends AbstractCrudController
      */
     protected function configureActions(): iterable|ActionsInterface
     {
-        $requeueJob = Button\Form::new(label: trans('Requeue Job'), group: 'entity')
+        $requeueJob = new Button\Form(label: trans('Requeue Job'), group: 'entity')
             ->name('requeueJob')
             ->linkToRoute('jobs.requeue', function(EntityInterface $entity): array {
                 return ['id' => $entity->id()];
             });
         
         return [
-            Action\Index::new(title: trans('Jobs'))
+            new Action\Index(title: trans('Jobs'))
                 ->addButton($requeueJob)
                 ->displayButtonIf('requeueJob', fn (EntityInterface $entity): bool => !$entity->get('queued'))
                 ->ajaxButtonAction('requeueJob')
                 ->groupButtons(
                     except: ['show'],
-                    button: Button\Dropdown::new(label: '', icon: 'dots', group: 'entity')
+                    button: new Button\Dropdown(label: '', icon: 'dots', group: 'entity')
                         ->name('more')
                         ->raw(),
                 ),
             
-            Action\Delete::new(),
+            new Action\Delete(),
             
-            Action\BulkDelete::new(),
+            new Action\BulkDelete(),
             
-            JobRequeueBulkAction::new(),
+            new JobRequeueBulkAction(),
             
-            Action\Show::new(trans('Job Details')),
+            new Action\Show(trans('Job Details')),
         ];
     }
     
@@ -177,25 +176,25 @@ class JobCrudController extends AbstractCrudController
     protected function configureFilters(ActionInterface $action): iterable|FiltersInterface
     {
         return [
-            ...Filter\Fields::new()->fields($action->fields())->toFilters(),
+            ...new Filter\Fields()->fields($action->fields())->toFilters(),
             
-            Filter\FieldsSortOrder::new(),
+            new Filter\FieldsSortOrder(),
             
-            Filter\ModalButton::new()->group('header'),
+            new Filter\ModalButton()->group('header'),
             
-            Filter\Group::new(name: 'group-columns')->group('modal')->label(trans('Columns'))->open(false),
+            new Filter\Group(name: 'group-columns')->group('modal')->label(trans('Columns'))->open(false),
             
-            Filter\Columns::new()
+            new Filter\Columns()
                 ->group('group-columns')
                 ->default('status', 'name', 'app_id', 'retries', 'queue', 'actions'),
             
-            Filter\Group::new(name: 'group-pagination')->group('modal')->label(trans('Pagination'))->open(false),
+            new Filter\Group(name: 'group-pagination')->group('modal')->label(trans('Pagination'))->open(false),
             
-            Filter\PaginationItemsPerPage::new()
+            new Filter\PaginationItemsPerPage()
                 ->group('group-pagination')
                 ->open(false),
             
-            Filter\Pagination::new()->group('footer'),
+            new Filter\Pagination()->group('footer'),
         ];
     }
 }
