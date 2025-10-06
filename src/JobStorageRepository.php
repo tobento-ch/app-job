@@ -34,27 +34,27 @@ class JobStorageRepository extends StorageRepository implements JobRepositoryInt
     protected function configureColumns(): iterable|ColumnsInterface
     {
         return [
-            Column\Id::new(),
-            Column\Text::new('status')->type(length: 100),
-            Column\Text::new('name'),
-            Column\Text::new('job_id'),
-            Column\Text::new('app_id'),
-            Column\Text::new('queue'),
-            Column\Boolean::new('queued'),
-            Column\Integer::new(name: 'retries', type: 'tinyInt')
+            new Column\Id(),
+            new Column\Text('status')->type(length: 100),
+            new Column\Text('name'),
+            new Column\Text('job_id'),
+            new Column\Text('app_id'),
+            new Column\Text('queue'),
+            new Column\Boolean('queued'),
+            new Column\Integer(name: 'retries', type: 'tinyInt')
                 ->type(length: 5, unsigned: true, nullable: false, default: 0),
             
             // must be of type timestamp as purge commands uses timestamps!
-            Column\Datetime::new(name: 'created_at', type: 'timestamp')->autoCreate(),
+            new Column\Datetime(name: 'created_at', type: 'timestamp')->autoCreate(),
             
-            Column\Datetime::new('run_at'),
-            Column\FloatCol::new('runtime_seconds')
+            new Column\Datetime('run_at'),
+            new Column\FloatCol('runtime_seconds')
                 ->type(nullable: true, precision: 3)
                 ->read(fn (null|float $value): float => is_null($value) ? 0 : round($value, 3)),
-            Column\Text::new('memory_usage_bytes')->type(nullable: true),
-            Column\Text::new(name: 'payload', type: 'text'),
-            Column\Text::new(name: 'exception', type: 'text'),
-            Column\Text::new(name: 'parameters', type: 'text'),
+            new Column\Text('memory_usage_bytes')->type(nullable: true),
+            new Column\Text(name: 'payload', type: 'text'),
+            new Column\Text(name: 'exception', type: 'text'),
+            new Column\Text(name: 'parameters', type: 'text'),
         ];
     }
     
@@ -95,8 +95,6 @@ class JobStorageRepository extends StorageRepository implements JobRepositoryInt
      * Starting job.
      *
      * @param JobInterface $job
-     * @param QueueInterface $queue
-     * @param string $appId
      * @return void
      */
     public function startingJob(JobInterface $job): void
@@ -112,8 +110,6 @@ class JobStorageRepository extends StorageRepository implements JobRepositoryInt
      * Finished job.
      *
      * @param JobInterface $job
-     * @param QueueInterface $queue
-     * @param string $appId
      * @return void
      */
     public function finishedJob(JobInterface $job): void

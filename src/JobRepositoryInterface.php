@@ -34,8 +34,6 @@ interface JobRepositoryInterface extends RepositoryInterface
      * Starting job.
      *
      * @param JobInterface $job
-     * @param QueueInterface $queue
-     * @param string $appId
      * @return void
      */
     public function startingJob(JobInterface $job): void;
@@ -44,8 +42,6 @@ interface JobRepositoryInterface extends RepositoryInterface
      * Finished job.
      *
      * @param JobInterface $job
-     * @param QueueInterface $queue
-     * @param string $appId
      * @return void
      */
     public function finishedJob(JobInterface $job): void;
