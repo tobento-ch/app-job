@@ -30,7 +30,7 @@ composer require tobento/app-job
 
 ## Requirements
 
-- PHP 8.0 or greater
+- PHP 8.4 or greater
 
 # Documentation
 
@@ -53,7 +53,7 @@ use Tobento\App\AppFactory;
 use Tobento\App\Job\JobRepositoryInterface;
 
 // Create the app
-$app = (new AppFactory())->createApp();
+$app = new AppFactory()->createApp();
 
 // Add directories:
 $app->dirs()
@@ -155,9 +155,9 @@ use Tobento\Service\Schedule\Task;
 use Butschster\CronExpression\Generator;
 
 $schedule->task(
-    (new Task\CommandTask(
+    new Task\CommandTask(
         command: 'jobs:purge',
-    ))
+    )
     // schedule task:
     ->cron(Generator::create()->daily())
 );
