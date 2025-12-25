@@ -13,14 +13,18 @@ declare(strict_types=1);
 
 namespace Tobento\App\Job\Crud;
 
+use Psr\Http\Message\ResponseInterface;
 use Tobento\App\AppInterface;
 use Tobento\App\Crud\Action\AbstractAction;
+use Tobento\App\Crud\ActionProcessorInterface;
 use Tobento\App\Crud\Action\BulkActionInterface;
 use Tobento\App\Crud\Action\HasActionProcessor;
+use Tobento\App\Crud\Action\Traits;
 use Tobento\App\Crud\Exception\ActionProcessException;
 use Tobento\App\Job\Service\AppFinder;
 use Tobento\Service\Queue\Parameter;
 use Tobento\Service\Queue\QueuesInterface;
+use Tobento\Service\Requester\RequesterInterface;
 use Tobento\Service\Responser\ResponserInterface;
 use Tobento\Service\Translation\TranslatorInterface;
 use Tobento\Service\View\ViewInterface;
@@ -29,6 +33,7 @@ use Throwable;
 final class JobRequeueBulkAction extends AbstractAction implements BulkActionInterface
 {
     use HasActionProcessor;
+    use Traits\HandleBulk;
     
     /**
      * Create a new JobRequeueBulkAction instance.
@@ -48,18 +53,6 @@ final class JobRequeueBulkAction extends AbstractAction implements BulkActionInt
     }
     
     /**
-     * Create a new instance.
-     *
-     * @param null|string $title
-     * @return static
-     */
-    public static function new(
-        null|string $title = null
-    ): static {
-        return new static($title);
-    }
-    
-    /**
      * Returns the name. Must be sluggable and only of [a-z-] characters.
      *
      * @return string
@@ -67,6 +60,37 @@ final class JobRequeueBulkAction extends AbstractAction implements BulkActionInt
     public function name(): string
     {
         return 'jobs-requeue';
+    }
+    
+    /**
+     * Returns the handler processing the action.
+     *
+     * @return callable(mixed...): \Psr\Http\Message\ResponseInterface
+     */
+    public function getHandler(): callable
+    {
+        return [$this, 'handle'];
+    }
+    
+    /**
+     * Handle action.
+     *
+     * @param ActionProcessorInterface $actionProcessor
+     * @param RequesterInterface $requester
+     * @param ResponserInterface $responser
+     * @return ResponseInterface
+     */
+    public function handle(
+        ActionProcessorInterface $actionProcessor,
+        RequesterInterface $requester,
+        ResponserInterface $responser,
+    ): ResponseInterface {
+        return $this->handleBulk(
+            action: $this,
+            actionProcessor: $actionProcessor,
+            requester: $requester,
+            responser: $responser,
+        );
     }
     
     /**
