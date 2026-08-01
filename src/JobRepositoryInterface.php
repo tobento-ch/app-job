@@ -54,4 +54,12 @@ interface JobRepositoryInterface extends RepositoryInterface
      * @return void
      */
     public function failedJob(JobInterface $job, Throwable $exception): void;
+    
+    /**
+     * Returns distinct values for the given column as a key/value array.
+     *
+     * @param string $column The column name to extract unique values from.
+     * @return array<string, string> The distinct values indexed by themselves.
+     */
+    public function distinctValues(string $column): array;
 }

@@ -163,4 +163,22 @@ class JobStorageRepository extends StorageRepository implements JobRepositoryInt
             ],
         );
     }
+    
+    /**
+     * Returns distinct values for the given column as a key/value array.
+     *
+     * @param string $column The column name to extract unique values from.
+     * @return array<string, string> The distinct values indexed by themselves.
+     */
+    public function distinctValues(string $column): array
+    {
+        $values = $this->query()
+            ->select($column)
+            ->groupBy($column)
+            ->column($column);
+
+        $unique = array_unique($values->all());
+
+        return array_combine($unique, $unique);
+    }
 }
