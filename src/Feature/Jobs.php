@@ -45,12 +45,14 @@ class Jobs extends Boot
      * @param null|string $menu The menu name or null if none.
      * @param string $menuLabel The menu label.
      * @param null|string $menuParent The menu parent or null if none.
+     * @param bool $findAppRecursive
      * @param bool $withAcl
      */
     public function __construct(
         protected null|string $menu = 'main',
         protected string $menuLabel = 'Jobs',
         protected null|string $menuParent = null,
+        protected bool $findAppRecursive = false,
         protected bool $withAcl = true,
     ) {}
 
@@ -72,6 +74,12 @@ class Jobs extends Boot
         if ($this->withAcl === false) {
             $acl->addPermissions(['jobs']);
         }
+        
+        $app->set(\Tobento\App\Job\Action\JobRequeueAction::class)
+            ->with(['findAppRecursive' => $this->findAppRecursive]);
+        
+        $app->set(JobCrudController::class)
+            ->with(['findAppRecursive' => $this->findAppRecursive]);
 
         // Routes:
         $router = $app->get(RouterInterface::class);
