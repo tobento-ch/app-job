@@ -43,9 +43,11 @@ class JobCrudController extends AbstractCrudController
      * Create a new JobCrudController instance.
      *
      * @param JobRepositoryInterface $repository
+     * @param bool $findAppRecursive
      */
     public function __construct(
         JobRepositoryInterface $repository,
+        protected bool $findAppRecursive = false,
     ) {
         $this->repository = $repository;
     }
@@ -145,26 +147,26 @@ class JobCrudController extends AbstractCrudController
                 return ['id' => $entity->id()];
             });
         
-        return [
-            new Action\Index(title: trans('Jobs'))
-                ->addButton($requeueJob)
-                ->displayButtonIf('requeueJob', fn (EntityInterface $entity): bool => !$entity->get('queued'))
-                ->ajaxButtonAction('requeueJob')
-                ->groupButtons(
-                    except: ['show'],
-                    button: new Button\Dropdown(label: '', icon: 'dots', group: 'entity')
-                        ->name('more')
-                        ->raw(),
-                ),
-            
-            new Action\Delete(),
-            
-            new Action\BulkDelete(),
-            
-            new JobRequeueBulkAction(),
-            
-            new Action\Show(trans('Job Details')),
-        ];
+        yield new Action\Index(title: trans('Jobs'))
+            ->addButton($requeueJob)
+            ->displayButtonIf('requeueJob', fn (EntityInterface $entity): bool => !$entity->get('queued'))
+            ->ajaxButtonAction('requeueJob')
+            ->groupButtons(
+                except: ['show'],
+                button: new Button\Dropdown(label: '', icon: 'dots', group: 'entity')
+                    ->name('more')
+                    ->raw(),
+            );
+
+        yield new Action\Delete();
+
+        yield new Action\BulkDelete();
+
+        yield new JobRequeueBulkAction(
+            findAppRecursive: $this->findAppRecursive,
+        );
+
+        yield new Action\Show(trans('Job Details'));
     }
     
     /**
@@ -176,7 +178,18 @@ class JobCrudController extends AbstractCrudController
     protected function configureFilters(ActionInterface $action): iterable|FiltersInterface
     {
         return [
-            ...new Filter\Fields()->fields($action->fields())->toFilters(),
+            ...new Filter\Fields()
+                ->fields($action->fields())
+                ->except('app_id', 'queue')
+                ->toFilters(),
+            
+            new Filter\Select(name: 'app_id', field: 'app_id')
+                ->options($this->repository()->distinctValues('app_id'))
+                ->group('field'),
+            
+            new Filter\Select(name: 'queue', field: 'queue')
+                ->options($this->repository()->distinctValues('queue'))
+                ->group('field'),
             
             new Filter\FieldsSortOrder(),
             
@@ -196,5 +209,10 @@ class JobCrudController extends AbstractCrudController
             
             new Filter\Pagination()->group('footer'),
         ];
+    }
+    
+    public function repository(): JobRepositoryInterface
+    {
+        return $this->repository;
     }
 }
