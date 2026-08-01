@@ -21,7 +21,7 @@ use Tobento\App\Crud\Action\BulkActionInterface;
 use Tobento\App\Crud\Action\HasActionProcessor;
 use Tobento\App\Crud\Action\Traits;
 use Tobento\App\Crud\Exception\ActionProcessException;
-use Tobento\App\Job\Service\AppFinder;
+use Tobento\Apps\AppFinder;
 use Tobento\Service\Queue\Parameter;
 use Tobento\Service\Queue\QueuesInterface;
 use Tobento\Service\Requester\RequesterInterface;
@@ -39,9 +39,11 @@ final class JobRequeueBulkAction extends AbstractAction implements BulkActionInt
      * Create a new JobRequeueBulkAction instance.
      *
      * @param null|string $title
+     * @param bool $findAppRecursive
      */
     public function __construct(
         null|string $title = null,
+        protected bool $findAppRecursive = false,
     ) {
         $this->title = $title ?: 'Requeue';
         $this->route('{name}.bulk', function(): array {
@@ -125,7 +127,11 @@ final class JobRequeueBulkAction extends AbstractAction implements BulkActionInt
                 continue;
             }
             
-            $app = (new AppFinder(app: $application))->findById(id: $jobEntity->appId());
+            $appFinder = new AppFinder(app: $application);
+            
+            $app = $this->findAppRecursive
+                ? $appFinder->findByIdRecursive(id: $jobEntity->appId())
+                : $appFinder->findById(id: $jobEntity->appId());
 
             if (is_null($app)) {
                 continue;

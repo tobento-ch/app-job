@@ -18,7 +18,7 @@ use Tobento\App\AppInterface;
 use Tobento\App\Http\Exception\HttpException;
 use Tobento\App\Http\Exception\NotFoundException;
 use Tobento\App\Job\JobRepositoryInterface;
-use Tobento\App\Job\Service\AppFinder;
+use Tobento\Apps\AppFinder;
 use Tobento\Service\Queue\Parameter;
 use Tobento\Service\Queue\QueuesInterface;
 use Tobento\Service\Responser\ResponserInterface;
@@ -27,6 +27,15 @@ use Tobento\Service\Translation\TranslatorInterface;
 
 class JobRequeueAction
 {
+    /**
+     * Create a new instance.
+     *
+     * @param bool $findAppRecursive
+     */
+    public function __construct(
+        protected bool $findAppRecursive = false,
+    ) {}
+        
     /**
      * Requeues the job.
      *
@@ -49,8 +58,12 @@ class JobRequeueAction
         if (is_null($jobEntity = $jobRepository->findById($id))) {
             throw new NotFoundException();
         }
-        
-        $app = (new AppFinder(app: $app))->findById(id: $jobEntity->appId());
+
+        $appFinder = new AppFinder(app: $app);
+
+        $app = $this->findAppRecursive
+            ? $appFinder->findByIdRecursive(id: $jobEntity->appId())
+            : $appFinder->findById(id: $jobEntity->appId());
         
         if (is_null($app)) {
             throw new HttpException(statusCode: 422, message: 'App with the ID :id not found.');
