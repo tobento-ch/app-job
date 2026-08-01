@@ -99,12 +99,31 @@ In the [config file](#job-config) you can configure this feature:
         // A menu parent name (e.g. 'system') or null if none.
         menuParent: null,
         
+        // You may enable recursive app lookup:
+        findAppRecursive: false, // default
+        
         // you may disable the ACL while testing for instance,
         // otherwise only users with the right permissions can access the page.
         withAcl: false,
     ),
 ],
 ```
+
+**Recursive App Lookup**
+
+The `findAppRecursive` option controls how the jobs feature resolves the correct application when requeuing jobs.
+
+`findAppRecursive: false` // default
+
+If set to `false`, the job's app is resolved directly using `AppFinder::findById()`.  
+This works for most setups, including typical multi-app projects (e.g., backend + frontend).
+
+If set to `true`, the jobs feature resolves the app using `AppFinder::findByIdRecursive()`, which is only needed if your application structure contains nested or hierarchical apps.
+
+See [App Finder](https://github.com/tobento-ch/apps#app-finder)
+
+> **Note**  
+> Recursive lookup is rarely needed. Enable it only if your app structure involves nested apps that require recursive resolution.
 
 **ACL Permissions**
 
